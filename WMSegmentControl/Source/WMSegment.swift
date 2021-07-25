@@ -96,6 +96,13 @@ open class WMSegment: UIControl {
             updateView()
         }
     }
+
+    @IBInspectable
+    public var bottomBarPadding : CGFloat = 0.0 {
+        didSet {
+            updateView()
+        }
+    }
     
     public var normalFont : UIFont = UIFont.systemFont(ofSize: 15) {
         didSet {
@@ -170,7 +177,7 @@ open class WMSegment: UIControl {
                 selector.layer.cornerRadius = 0
             }
         } else if selectorType == .bottomBar {
-            selector = UIView(frame: CGRect(x: 0, y: frame.height - bottomBarHeight, width: selectorWidth, height: bottomBarHeight))
+            selector = UIView(frame: CGRect(x: 0 + bottomBarPadding, y: frame.height - bottomBarHeight, width: selectorWidth - (bottomBarPadding * 2), height: bottomBarHeight))
             selector.layer.cornerRadius = 0
         }
         
@@ -249,7 +256,10 @@ open class WMSegment: UIControl {
             btn.titleLabel?.font = normalFont
             if btn == sender {
                 selectedSegmentIndex = buttonIndex
-                let startPosition = frame.width/CGFloat(buttons.count) * CGFloat(buttonIndex)
+                var startPosition = frame.width/CGFloat(buttons.count) * CGFloat(buttonIndex)
+                if selectorType == .bottomBar {
+                    startPosition = startPosition + bottomBarPadding
+                }
                 if self.animate {
                     UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
                         self.selector.frame.origin.x = startPosition
@@ -273,7 +283,10 @@ open class WMSegment: UIControl {
             
             if btn.tag == index {
                 selectedSegmentIndex = buttonIndex
-                let startPosition = frame.width/CGFloat(buttons.count) * CGFloat(buttonIndex)
+                var startPosition = frame.width/CGFloat(buttons.count) * CGFloat(buttonIndex)
+                if selectorType == .bottomBar {
+                    startPosition = startPosition + bottomBarPadding
+                }
                 if self.animate {
                     UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
                         self.selector.frame.origin.x = startPosition
