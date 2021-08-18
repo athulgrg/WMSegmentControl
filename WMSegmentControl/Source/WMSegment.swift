@@ -7,80 +7,53 @@
 //
 
 import UIKit
-@IBDesignable
+
 open class WMSegment: UIControl {
     public var onValueChanged: ((_ index: Int)->())?
     var buttons = [UIButton]()
     var selector: UIView!
     public var selectedSegmentIndex: Int = 0
-    
-    public var type: SegementType = .normal {
-        didSet {
-            updateView()
-        }
-    }
-    
-    public var selectorType: SelectorType = .normal {
-        didSet {
-            updateView()
-        }
-    }
-    
-    @IBInspectable
+
     public var borderWidth: CGFloat = 0 {
         didSet {
             layer.borderWidth = borderWidth
         }
     }
-    
-    @IBInspectable
     public var borderColor: UIColor = .clear {
         didSet {
             layer.borderColor = borderColor.cgColor
         }
     }
-    
-    @IBInspectable
     public var cornerRadius: CGFloat = 0 {
         didSet {
             layer.cornerRadius = cornerRadius
         }
     }
-    @IBInspectable
-    public var buttonTitles: String = ""{
+    public var buttonTitles: [String] = [String]() {
         didSet {
             updateView()
         }
     }
-    
-    @IBInspectable
-    public var buttonImages: String = ""{
+    public var textColor: UIColor = .darkGray {
         didSet {
             updateView()
         }
     }
-    
-    @IBInspectable
-    public var textColor: UIColor = .lightGray {
+    public var selectorTextColor: UIColor = .black {
         didSet {
             updateView()
         }
     }
-    
-    @IBInspectable
-    public var selectorTextColor: UIColor = .white {
+    public var selectorColor: UIColor = .orange {
         didSet {
             updateView()
         }
     }
-    @IBInspectable
-    public var selectorColor: UIColor = .darkGray {
+    public var bracketTextColor: UIColor = .lightGray {
         didSet {
             updateView()
         }
     }
-    
-    @IBInspectable
     public var isRounded: Bool = false {
         didSet {
             if self.isRounded == true {
@@ -89,27 +62,21 @@ open class WMSegment: UIControl {
             updateView()
         }
     }
-    
-    @IBInspectable
     public var bottomBarHeight : CGFloat = 5.0 {
         didSet {
             updateView()
         }
     }
-
-    @IBInspectable
     public var bottomBarPadding : CGFloat = 0.0 {
         didSet {
             updateView()
         }
     }
-    
     public var normalFont : UIFont = UIFont.systemFont(ofSize: 15) {
         didSet {
             updateView()
         }
     }
-    
     public var SelectedFont : UIFont = UIFont.systemFont(ofSize: 15) {
         didSet {
             updateView()
@@ -131,19 +98,8 @@ open class WMSegment: UIControl {
         subviews.forEach({$0.removeFromSuperview()})
         NotificationCenter.default.removeObserver("DeviceRotated")
         NotificationCenter.default.addObserver(self, selector: #selector(setViewLayout), name: NSNotification.Name(rawValue: "DeviceRotated"), object: nil)
-        if self.type == .normal {
-            buttons = getButtonsForNormalSegment()
-        }  else if self.type == .imageOnTop {
-            buttons = getButtonsForNormalSegment(true)
-        } else if self.type == .onlyImage {
-            buttons = getButtonsForOnlyImageSegment()
-        }
-        
-        if selectedSegmentIndex < buttons.count {
-            buttons[selectedSegmentIndex].tintColor = selectorTextColor
-            buttons[selectedSegmentIndex].setTitleColor(selectorTextColor, for: .normal)
-            buttons[selectedSegmentIndex].titleLabel?.font = SelectedFont
-        }
+        buttons = getButtonsForNormalSegment()
+
         setupSelector()
         addSubview(selector)
         let sv = UIStackView(arrangedSubviews: buttons)
@@ -160,73 +116,25 @@ open class WMSegment: UIControl {
     }
     
     func setupSelector() {
-        
-        let titles = buttonTitles.components(separatedBy: ",")
-        let images = buttonImages.components(separatedBy: ",")
-        var selectorWidth = frame.width / CGFloat(titles.count)
-        if self.type == .onlyImage {
-            selectorWidth = frame.width / CGFloat(images.count)
-        }
-        
-        
-        if selectorType == .normal {
-            selector = UIView(frame: CGRect(x: 0, y: 0, width: selectorWidth, height: frame.height))
-            if isRounded {
-                selector.layer.cornerRadius = frame.height / 2
-            } else {
-                selector.layer.cornerRadius = 0
-            }
-        } else if selectorType == .bottomBar {
-            selector = UIView(frame: CGRect(x: 0 + bottomBarPadding, y: frame.height - bottomBarHeight, width: selectorWidth - (bottomBarPadding * 2), height: bottomBarHeight))
+        let titles = buttonTitles
+        let selectorWidth = frame.width / CGFloat(titles.count)
+        selector = UIView(frame: CGRect(x: 0 + bottomBarPadding, y: frame.height - bottomBarHeight, width: selectorWidth - (bottomBarPadding * 2), height: bottomBarHeight))
             selector.layer.cornerRadius = 0
-        }
-        
         selector.backgroundColor = selectorColor
     }
     
     //MARK : Get Button as per segment type
-    func getButtonsForNormalSegment(_ isImageTop: Bool = false) -> [UIButton] {
+    func getButtonsForNormalSegment() -> [UIButton] {
         var btn = [UIButton]()
-        let titles = buttonTitles.components(separatedBy: ",")
-        let images = buttonImages.components(separatedBy: ",")
+        let titles = buttonTitles
         for (index, buttonTitle) in titles.enumerated() {
             let button = UIButton(type: .system)
-            button.setTitle(buttonTitle, for: .normal)
+            let title = getAttributedTitle(string: buttonTitle, isSelected: false)
+            button.setAttributedTitle(title, for: .normal)
             button.tag = index
-            button.tintColor = textColor
-            button.setTitleColor(textColor, for: .normal)
-            button.titleLabel?.font = normalFont
             button.titleLabel?.textAlignment = .center
             button.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
             btn.append(button)
-            if index < images.count {
-                if images[index] != ""{
-                    button.setImage(UIImage(named: images[index]), for: .normal)
-                    if isImageTop == false {
-                        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
-                    } else {
-                        button.centerImageAndButton(5, imageOnTop: true)
-                    }
-                }
-                
-                
-            }
-        }
-        
-        return btn
-    }
-    
-    func getButtonsForOnlyImageSegment() -> [UIButton] {
-        var btn = [UIButton]()
-        let images = buttonImages.components(separatedBy: ",")
-        for (index, buttonImage) in images.enumerated() {
-            let button = UIButton(type: .system)
-            button.setImage(UIImage(named: buttonImage), for: .normal)
-            button.tag = index
-            button.tintColor = textColor
-            button.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
-            btn.append(button)
-            
         }
         return btn
     }
@@ -249,44 +157,22 @@ open class WMSegment: UIControl {
     }
     
     @objc func buttonTapped(_ sender: UIButton) {
-        
-        for (buttonIndex, btn) in buttons.enumerated() {
-            btn.tintColor = textColor
-            btn.setTitleColor(textColor, for: .normal)
-            btn.titleLabel?.font = normalFont
-            if btn == sender {
-                selectedSegmentIndex = buttonIndex
-                var startPosition = frame.width/CGFloat(buttons.count) * CGFloat(buttonIndex)
-                if selectorType == .bottomBar {
-                    startPosition = startPosition + bottomBarPadding
-                }
-                if self.animate {
-                    UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
-                        self.selector.frame.origin.x = startPosition
-                    }, completion: nil)
-                }else{
-                    self.selector.frame.origin.x = startPosition
-                }
-                btn.titleLabel?.font = SelectedFont
-                btn.tintColor = selectorTextColor
-                btn.setTitleColor(selectorTextColor, for: .normal)
-            }
-        }
+        setSelectedIndex(sender.tag)
         onValueChanged?(selectedSegmentIndex)
         sendActions(for: .valueChanged)
     }
     //MARK: set Selected Index
     open func setSelectedIndex(_ index: Int) {
         for (buttonIndex, btn) in buttons.enumerated() {
-            btn.tintColor = textColor
-            btn.setTitleColor(textColor, for: .normal)
-            
             if btn.tag == index {
+                let title = getAttributedTitle(string: buttonTitles[buttonIndex], isSelected: true)
+                UIView.performWithoutAnimation {
+                    btn.setAttributedTitle(title, for: .normal)
+                    btn.layoutIfNeeded()
+                }
                 selectedSegmentIndex = buttonIndex
                 var startPosition = frame.width/CGFloat(buttons.count) * CGFloat(buttonIndex)
-                if selectorType == .bottomBar {
-                    startPosition = startPosition + bottomBarPadding
-                }
+                startPosition = startPosition + bottomBarPadding
                 if self.animate {
                     UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
                         self.selector.frame.origin.x = startPosition
@@ -294,9 +180,12 @@ open class WMSegment: UIControl {
                 }else{
                     self.selector.frame.origin.x = startPosition
                 }
-                
-                btn.tintColor = selectorTextColor
-                btn.setTitleColor(selectorTextColor, for: .normal)
+            } else {
+                let title = getAttributedTitle(string: buttonTitles[buttonIndex], isSelected: false)
+                UIView.performWithoutAnimation {
+                    btn.setAttributedTitle(title, for: .normal)
+                    btn.layoutIfNeeded()
+                }
             }
         }
     }
@@ -305,28 +194,37 @@ open class WMSegment: UIControl {
     open func changeSelectedColor(_ color: UIColor) {
         self.selector.backgroundColor = color
     }
-    
-}
-//MARK: UIbutton Extesion
-extension UIButton {
-    func centerImageAndButton(_ gap: CGFloat, imageOnTop: Bool) {
-        
-        guard let imageView = self.currentImage,
-            let titleLabel = self.titleLabel?.text else { return }
-        
-        let sign: CGFloat = imageOnTop ? 1 : -1
-        self.titleEdgeInsets = UIEdgeInsets(top: (imageView.size.height + gap) * sign, left: -imageView.size.width, bottom: 0, right: 0);
-        
-        let titleSize = titleLabel.size(withAttributes:[NSAttributedString.Key.font: self.titleLabel!.font!])
-        self.imageEdgeInsets = UIEdgeInsets(top: -(titleSize.height + gap) * sign, left: 0, bottom: 0, right: -titleSize.width)
+
+    private func getAttributedTitle(string: String, isSelected: Bool) -> NSAttributedString? {
+        var font = normalFont
+        var color = textColor
+
+        if isSelected {
+            font = SelectedFont
+            color = selectorTextColor
+        }
+
+        guard let regex = try? NSRegularExpression(pattern: "\\((.*?)\\)") else {
+            return nil
+        }
+        let matches = regex.matches(in: string,
+                                 range: NSRange(string.startIndex..., in: string))
+        guard let first = matches.first, let range = Range(first.range, in: string) else {
+            return nil
+        }
+        let result = String(string[range])
+
+        let attr = NSMutableAttributedString(string: string.replacingCharacters(in: range, with: ""))
+            attr.addAttributes([NSAttributedString.Key.font: font,
+                                NSAttributedString.Key.foregroundColor: color],
+                               range: NSRange(attr.string.startIndex..., in: attr.string))
+
+        let attr1 = NSMutableAttributedString(string:result)
+        attr1.addAttributes([NSAttributedString.Key.font: font,
+                            NSAttributedString.Key.foregroundColor: bracketTextColor],
+                           range: NSRange(result.startIndex..., in: result))
+        attr.append(attr1)
+        return attr
+
     }
 }
-//MARK: Enums
-public enum SegementType: Int {
-    case normal = 0, imageOnTop, onlyImage
-}
-
-public enum SelectorType: Int {
-    case normal = 0, bottomBar
-}
-
