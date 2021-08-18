@@ -210,14 +210,18 @@ open class WMSegment: UIControl {
         let matches = regex.matches(in: string,
                                  range: NSRange(string.startIndex..., in: string))
         guard let first = matches.first, let range = Range(first.range, in: string) else {
-            return nil
+            let attr = NSMutableAttributedString(string: string)
+            attr.addAttributes([NSAttributedString.Key.font: font,
+                                NSAttributedString.Key.foregroundColor: color],
+                               range: NSRange(attr.string.startIndex..., in: attr.string))
+            return attr
         }
         let result = String(string[range])
 
         let attr = NSMutableAttributedString(string: string.replacingCharacters(in: range, with: ""))
-            attr.addAttributes([NSAttributedString.Key.font: font,
-                                NSAttributedString.Key.foregroundColor: color],
-                               range: NSRange(attr.string.startIndex..., in: attr.string))
+        attr.addAttributes([NSAttributedString.Key.font: font,
+                            NSAttributedString.Key.foregroundColor: color],
+                           range: NSRange(attr.string.startIndex..., in: attr.string))
 
         let attr1 = NSMutableAttributedString(string:result)
         attr1.addAttributes([NSAttributedString.Key.font: font,

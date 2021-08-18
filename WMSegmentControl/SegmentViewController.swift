@@ -15,9 +15,9 @@ class SegmentViewController: UITableViewController {
         super.viewDidLoad()
         self.title = "Custom Segment"
 
-        let att1 = "Athul1 (03)"
+        let att1 = "Athul1"
         let att2 = "Athul2 (15)"
-        let att3 = "Athul3 (20)"
+        let att3 = "Athul3 ()"
 
         sgTextOnlyBar.buttonTitles = [att1, att2, att3]
 
