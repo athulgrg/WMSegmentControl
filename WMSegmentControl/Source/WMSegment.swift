@@ -10,25 +10,10 @@ import UIKit
 
 open class WMSegment: UIControl {
     public var onValueChanged: ((_ index: Int)->())?
-    var buttons = [UIButton]()
-    var selector: UIView!
-    public var selectedSegmentIndex: Int = 0
+    private var buttons = [UIButton]()
+    private var selectors = [UIView]()
+    private var selectedSegmentIndex: Int = 0
 
-    public var borderWidth: CGFloat = 0 {
-        didSet {
-            layer.borderWidth = borderWidth
-        }
-    }
-    public var borderColor: UIColor = .clear {
-        didSet {
-            layer.borderColor = borderColor.cgColor
-        }
-    }
-    public var cornerRadius: CGFloat = 0 {
-        didSet {
-            layer.cornerRadius = cornerRadius
-        }
-    }
     public var buttonTitles: [String] = [String]() {
         didSet {
             updateView()
@@ -54,20 +39,12 @@ open class WMSegment: UIControl {
             updateView()
         }
     }
-    public var isRounded: Bool = false {
-        didSet {
-            if self.isRounded == true {
-                layer.cornerRadius = frame.height/2
-            }
-            updateView()
-        }
-    }
     public var bottomBarHeight : CGFloat = 5.0 {
         didSet {
             updateView()
         }
     }
-    public var bottomBarPadding : CGFloat = 0.0 {
+    public var bottomBarOffsetRatio : CGFloat = 0.0 {
         didSet {
             updateView()
         }
@@ -77,14 +54,12 @@ open class WMSegment: UIControl {
             updateView()
         }
     }
-    public var SelectedFont : UIFont = UIFont.systemFont(ofSize: 15) {
+    public var selectedFont : UIFont = UIFont.systemFont(ofSize: 15) {
         didSet {
             updateView()
         }
     }
-    
-    public var animate: Bool = true
-    
+
     private var isFrameAreSet = false
     open override func awakeFromNib() {
         super.awakeFromNib()
@@ -95,13 +70,12 @@ open class WMSegment: UIControl {
     open func updateView() {
         self.clipsToBounds = true
         buttons.removeAll()
+        selectors.removeAll()
         subviews.forEach({$0.removeFromSuperview()})
         NotificationCenter.default.removeObserver("DeviceRotated")
         NotificationCenter.default.addObserver(self, selector: #selector(setViewLayout), name: NSNotification.Name(rawValue: "DeviceRotated"), object: nil)
         buttons = getButtonsForNormalSegment()
 
-        setupSelector()
-        addSubview(selector)
         let sv = UIStackView(arrangedSubviews: buttons)
         sv.axis = .horizontal
         sv.alignment = .fill
@@ -113,14 +87,29 @@ open class WMSegment: UIControl {
         sv.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
         sv.leftAnchor.constraint(equalTo: self.leftAnchor).isActive = true
         sv.rightAnchor.constraint(equalTo: self.rightAnchor).isActive = true
+
+        setupSelectors()
     }
     
-    func setupSelector() {
-        let titles = buttonTitles
-        let selectorWidth = frame.width / CGFloat(titles.count)
-        selector = UIView(frame: CGRect(x: 0 + bottomBarPadding, y: frame.height - bottomBarHeight, width: selectorWidth - (bottomBarPadding * 2), height: bottomBarHeight))
-            selector.layer.cornerRadius = 0
-        selector.backgroundColor = selectorColor
+    func setupSelectors() {
+        _ = buttons.map({ btn in
+
+            var width = width(string: (btn.attributedTitle(for: .normal))?.string ?? "")
+            width = width + (width * bottomBarOffsetRatio)
+
+            let selector = UIView()
+            addSubview(selector)
+
+            selector.translatesAutoresizingMaskIntoConstraints = false
+            let horizontalConstraint = NSLayoutConstraint(item: selector, attribute: NSLayoutConstraint.Attribute.centerX, relatedBy: NSLayoutConstraint.Relation.equal, toItem: btn, attribute: NSLayoutConstraint.Attribute.centerX, multiplier: 1, constant: 0)
+            let verticalConstraint = NSLayoutConstraint(item: selector, attribute: NSLayoutConstraint.Attribute.bottom, relatedBy: NSLayoutConstraint.Relation.equal, toItem: btn, attribute: NSLayoutConstraint.Attribute.bottom, multiplier: 1, constant: 0)
+            let widthConstraint = NSLayoutConstraint(item: selector, attribute: NSLayoutConstraint.Attribute.width, relatedBy: NSLayoutConstraint.Relation.equal, toItem: nil, attribute: NSLayoutConstraint.Attribute.notAnAttribute, multiplier: 1, constant: width)
+            let heightConstraint = NSLayoutConstraint(item: selector, attribute: NSLayoutConstraint.Attribute.height, relatedBy: NSLayoutConstraint.Relation.equal, toItem: nil, attribute: NSLayoutConstraint.Attribute.notAnAttribute, multiplier: 1, constant: bottomBarHeight)
+            addConstraints([horizontalConstraint, verticalConstraint, widthConstraint, heightConstraint])
+
+            selectors.append(selector)
+            selector.backgroundColor = selectorColor
+        })
     }
     
     //MARK : Get Button as per segment type
@@ -149,10 +138,7 @@ open class WMSegment: UIControl {
     @objc open func setViewLayout() {
         layoutIfNeeded()
         updateView()
-        let _animated = self.animate
-        self.animate = false
         setSelectedIndex(self.selectedSegmentIndex)
-        self.animate = _animated
         isFrameAreSet = true
     }
     
@@ -161,8 +147,11 @@ open class WMSegment: UIControl {
         onValueChanged?(selectedSegmentIndex)
         sendActions(for: .valueChanged)
     }
+
     //MARK: set Selected Index
     open func setSelectedIndex(_ index: Int) {
+        selectedSegmentIndex = index
+
         for (buttonIndex, btn) in buttons.enumerated() {
             if btn.tag == index {
                 let title = getAttributedTitle(string: buttonTitles[buttonIndex], isSelected: true)
@@ -170,29 +159,16 @@ open class WMSegment: UIControl {
                     btn.setAttributedTitle(title, for: .normal)
                     btn.layoutIfNeeded()
                 }
-                selectedSegmentIndex = buttonIndex
-                var startPosition = frame.width/CGFloat(buttons.count) * CGFloat(buttonIndex)
-                startPosition = startPosition + bottomBarPadding
-                if self.animate {
-                    UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
-                        self.selector.frame.origin.x = startPosition
-                    }, completion: nil)
-                }else{
-                    self.selector.frame.origin.x = startPosition
-                }
+                selectors[buttonIndex].backgroundColor = selectorColor
             } else {
                 let title = getAttributedTitle(string: buttonTitles[buttonIndex], isSelected: false)
                 UIView.performWithoutAnimation {
                     btn.setAttributedTitle(title, for: .normal)
                     btn.layoutIfNeeded()
                 }
+                selectors[buttonIndex].backgroundColor = UIColor.clear
             }
         }
-    }
-    
-    //MARK: chage Selector Color
-    open func changeSelectedColor(_ color: UIColor) {
-        self.selector.backgroundColor = color
     }
 
     private func getAttributedTitle(string: String, isSelected: Bool) -> NSAttributedString? {
@@ -200,7 +176,7 @@ open class WMSegment: UIControl {
         var color = textColor
 
         if isSelected {
-            font = SelectedFont
+            font = selectedFont
             color = selectorTextColor
         }
 
@@ -230,5 +206,12 @@ open class WMSegment: UIControl {
         attr.append(attr1)
         return attr
 
+    }
+
+    func width(string: String) -> CGFloat {
+        let rect = string.boundingRect(with: CGSize.init(width: CGFloat.greatestFiniteMagnitude, height: frame.height),
+                                     options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                     context: nil)
+        return ceil(rect.size.width)
     }
 }

@@ -16,19 +16,20 @@ class SegmentViewController: UITableViewController {
         self.title = "Custom Segment"
 
         let att1 = "Athul1"
-        let att2 = "Athul2 (15)"
+        let att2 = "Athul2Athul2"
         let att3 = "Athul3 ()"
 
         sgTextOnlyBar.buttonTitles = [att1, att2, att3]
 
-        sgTextOnlyBar.SelectedFont = UIFont(name: "ChalkboardSE-Bold", size: 17)!
+        sgTextOnlyBar.selectedFont = UIFont(name: "ChalkboardSE-Bold", size: 17)!
         sgTextOnlyBar.normalFont = UIFont(name: "ChalkboardSE-Regular", size: 15)!
 
         sgTextOnlyBar.bottomBarHeight = 2
-        sgTextOnlyBar.bottomBarPadding = 15
+        sgTextOnlyBar.bottomBarOffsetRatio = 0.7
         sgTextOnlyBar.onValueChanged = { index in
             print(index)
         }
+        sgTextOnlyBar.setSelectedIndex(2)
     }
     
     @IBAction func segmentValueChange(_ sender: WMSegment) {
