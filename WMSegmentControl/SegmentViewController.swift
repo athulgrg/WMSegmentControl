@@ -16,7 +16,7 @@ class SegmentViewController: UITableViewController {
         self.title = "Custom Segment"
 
         let att1 = "Athul1"
-        let att2 = "Athul2Athul2"
+        let att2 = "Athul2Athul2Athul2Athul2Athul2"
         let att3 = "Athul3 ()"
 
         sgTextOnlyBar.buttonTitles = [att1, att2, att3]
@@ -26,6 +26,7 @@ class SegmentViewController: UITableViewController {
 
         sgTextOnlyBar.bottomBarHeight = 2
         sgTextOnlyBar.bottomBarOffsetRatio = 0.7
+        sgTextOnlyBar.minimunScaleFactor = 0.8
         sgTextOnlyBar.onValueChanged = { index in
             print(index)
         }

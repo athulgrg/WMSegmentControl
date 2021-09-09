@@ -59,6 +59,11 @@ open class WMSegment: UIControl {
             updateView()
         }
     }
+    public var minimunScaleFactor : CGFloat = 1.0 {
+        didSet {
+            updateView()
+        }
+    }
 
     private var isFrameAreSet = false
     open override func awakeFromNib() {
@@ -98,7 +103,8 @@ open class WMSegment: UIControl {
             width = width + (width * bottomBarOffsetRatio)
 
             let selector = UIView()
-            addSubview(selector)
+            btn.addSubview(selector)
+            btn.clipsToBounds = true
 
             selector.translatesAutoresizingMaskIntoConstraints = false
             let horizontalConstraint = NSLayoutConstraint(item: selector, attribute: NSLayoutConstraint.Attribute.centerX, relatedBy: NSLayoutConstraint.Relation.equal, toItem: btn, attribute: NSLayoutConstraint.Attribute.centerX, multiplier: 1, constant: 0)
@@ -120,6 +126,8 @@ open class WMSegment: UIControl {
             let button = UIButton(type: .system)
             let title = getAttributedTitle(string: buttonTitle, isSelected: false)
             button.setAttributedTitle(title, for: .normal)
+            button.titleLabel?.minimumScaleFactor = minimunScaleFactor
+            button.titleLabel?.adjustsFontSizeToFitWidth = true
             button.tag = index
             button.titleLabel?.textAlignment = .center
             button.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
