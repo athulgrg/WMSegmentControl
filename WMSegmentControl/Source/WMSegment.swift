@@ -64,6 +64,11 @@ open class WMSegment: UIControl {
             updateView()
         }
     }
+    public var segmentDistributionType : UIStackView.Distribution = .fillEqually {
+        didSet {
+            updateView()
+        }
+    }
 
     private var isFrameAreSet = false
     open override func awakeFromNib() {
@@ -84,7 +89,7 @@ open class WMSegment: UIControl {
         let sv = UIStackView(arrangedSubviews: buttons)
         sv.axis = .horizontal
         sv.alignment = .fill
-        sv.distribution = .fillEqually//.fillProportionally
+        sv.distribution = segmentDistributionType
         addSubview(sv)
         sv.translatesAutoresizingMaskIntoConstraints = false
         
